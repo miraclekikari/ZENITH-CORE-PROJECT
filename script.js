@@ -1,108 +1,110 @@
-// CONNEXION SUPABASE
+// --- CONFIGURATION ---
 const _supabase = supabase.createClient('https://ubmewtlymrnbcamanjhs.supabase.co', 'sb_publishable_EY6s8jOGhajZ_aBjQgLkdQ_58aiZhxO');
 
-// CONFIGURATION DES MENUS LATÉRAUX
-const sideMenus = {
-    courses: [
-        {header: "PARCOURS"},
-        {icon: 'fa-network-wired', label: 'Réseaux & Infra'},
-        {icon: 'fa-code', label: 'Développement Web'},
-        {icon: 'fa-shield-alt', label: 'Cybersécurité'},
-        {header: "DOSSIERS"},
-        {icon: 'fa-bookmark', label: 'Favoris'},
-        {icon: 'fa-history', label: 'Historique'}
-    ],
-    community: [
-        {header: "SOCIAL"},
-        {icon: 'fa-fire', label: 'Tendances Campus'},
-        {icon: 'fa-user-friends', label: 'Mon Cercle'},
-        {header: "INTERACTIONS"},
-        {icon: 'fa-poll', label: 'Sondages'},
-        {icon: 'fa-trophy', label: 'Classement XP'}
-    ],
-    publish: [
-        {icon: 'fa-pen-fancy', label: 'Nouvel Article'},
-        {icon: 'fa-code', label: 'Partager Code'},
-        {icon: 'fa-image', label: 'Projet Portfolio'}
-    ],
-    labo: [
-        {header: "OUTILS DEV"},
-        {icon: 'fa-terminal', label: 'Terminal JS'},
-        {icon: 'fa-laptop-code', label: 'Éditeur Web'},
-        {icon: 'fa-database', label: 'Validateur JSON'},
-        {header: "UTILITAIRES"},
-        {icon: 'fa-calculator', label: 'Calculatrice'},
-        {icon: 'fa-stopwatch', label: 'Pomodoro'},
-        {icon: 'fa-bug', label: 'Debug Log'}
-    ],
-    settings: [
-        {header: "COMPTE"},
-        {icon: 'fa-id-card', label: 'Badge & Certif'},
-        {icon: 'fa-moon', label: 'Mode Sombre (ON)'},
-        {icon: 'fa-headset', label: 'Support Admin'}
-    ]
-};
-
-// FONCTION : CHANGER D'ONGLET
-function switchTab(tabId) {
-    // 1. Mise à jour boutons bas
-    document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-    // On cherche le bouton qui contient le onclick correspondant (astuce simple)
-    const activeBtn = Array.from(document.querySelectorAll('.nav-btn')).find(b => b.getAttribute('onclick').includes(tabId));
-    if(activeBtn) activeBtn.classList.add('active');
-
-    // 2. Mise à jour Sidebar
-    const sideContent = document.getElementById('side-content');
-    sideContent.innerHTML = '';
-    (sideMenus[tabId] || []).forEach(item => {
-        if(item.header) {
-            sideContent.innerHTML += `<div style="padding: 15px 20px 5px; color:var(--primary); font-size:0.8rem; font-weight:bold; letter-spacing:1px;">${item.header}</div>`;
-        } else {
-            sideContent.innerHTML += `
-                <div class="side-item" onclick="alert('Module [${item.label}] bientôt disponible !')">
-                    <i class="fas ${item.icon}"></i>
-                    <span class="side-label">${item.label}</span>
-                </div>`;
-        }
-    });
-
-    // 3. Afficher le contenu
-    renderContent(tabId);
+// ALGORITHME SENTINEL (Modération locale)
+const FORBIDDEN_WORDS = ['merde', 'con', 'connard', 'arnaque', 'fake', 'idiot'];
+function sentinelCheck(text) {
+    const lower = text.toLowerCase();
+    for(let word of FORBIDDEN_WORDS) {
+        if(lower.includes(word)) return false; // Rejeté
+    }
+    return true; // Validé
 }
 
-// FONCTION : AFFICHER LE CONTENU CENTRAL
-function renderContent(tabId) {
-    const body = document.getElementById('view-body');
-    const title = document.getElementById('view-title');
+// --- NAVIGATION ---
+function nav(pageId) {
+    document.querySelectorAll('.view-section').forEach(el => el.classList.add('hidden'));
+    document.getElementById(pageId).classList.remove('hidden');
+    
+    // Active class sidebar
+    document.querySelectorAll('.nav-icon').forEach(el => el.classList.remove('active'));
+    event.currentTarget.classList.add('active');
+}
 
-    if(tabId === 'courses') {
-        title.innerText = "ACADÉMIE ZENITH";
-        body.innerHTML = `
-            <div class="glass-card" style="display:flex; gap:20px; align-items:center; flex-wrap:wrap;">
-                <img src="https://images.unsplash.com/photo-1558494949-ef010cbdcc51" style="width:120px; height:120px; border-radius:12px; object-fit:cover; border:2px solid var(--primary);">
-                <div>
-                    <span style="color:var(--primary); font-weight:bold; letter-spacing:1px;">⚡ MODULE RECOMMANDÉ</span>
-                    <h3 style="margin:10px 0; font-size:1.3rem;">Initiation aux Réseaux</h3>
-                    <p style="color:var(--text-dim);">Comprendre l'infrastructure du web moderne.</p>
-                    <button style="margin-top:15px; background:var(--primary); color:black; border:none; padding:10px 25px; border-radius:8px; font-weight:bold; cursor:pointer;" onclick="location.href='course.html?id=permanent'">COMMENCER</button>
-                </div>
-            </div>`;
-    } else if(tabId === 'labo') {
-        title.innerText = "BOÎTE À OUTILS";
-        body.innerHTML = `
-            <div class="grid-tools">
-                <div class="tool-box"><i class="fas fa-calculator"></i><span>Calculatrice</span></div>
-                <div class="tool-box"><i class="fas fa-terminal"></i><span>Console JS</span></div>
-                <div class="tool-box"><i class="fas fa-code"></i><span>Éditeur Web</span></div>
-                <div class="tool-box"><i class="fas fa-key"></i><span>Générateur</span></div>
-                <div class="tool-box"><i class="fas fa-stopwatch"></i><span>Pomodoro</span></div>
-                <div class="tool-box"><i class="fas fa-bug"></i><span>Debug</span></div>
-            </div>`;
-    } else {
-        title.innerText = `MODULE ${tabId.toUpperCase()}`;
-        body.innerHTML = `<div class="glass-card" style="text-align:center; padding:50px;"><i class="fas fa-sync fa-spin" style="font-size:2rem; margin-bottom:20px;"></i><p>Chargement du système...</p></div>`;
+// --- MODULE LATEX & PDF ---
+function updateLatex() {
+    const input = document.getElementById('latex-input').value;
+    const preview = document.getElementById('latex-preview');
+    preview.innerHTML = input; // Injection brute pour le texte
+    // Appel à MathJax pour le rendu mathématique
+    if(window.MathJax) {
+        MathJax.typesetPromise([preview]).catch((err) => console.log(err));
     }
 }
 
-// AUTO-START
-setTimeout(() => { switchTab('courses'); }, 3800);
+function exportPDF() {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+    const content = document.getElementById('latex-preview').innerText;
+    
+    doc.text("ZENITH CORE - DOCUMENT", 10, 10);
+    doc.text(content, 10, 20); // Version simplifiée (le vrai rendu LaTeX en PDF JS est très complexe)
+    doc.save("document_zenith.pdf");
+    alert("Téléchargement lancé !");
+}
+
+// --- MODULE IA (GEMINI INTEGRATION) ---
+async function askGemini() {
+    const input = document.getElementById('ai-input');
+    const container = document.getElementById('chat-container');
+    const question = input.value;
+    if(!question) return;
+
+    // 1. Afficher la question
+    container.innerHTML += `<div style="text-align:right; margin:10px; color:var(--primary)">${question}</div>`;
+    input.value = '';
+
+    // 2. Simulation Appel API (Pour sécurité frontend, on ne met pas la clé ici en clair)
+    container.innerHTML += `<div style="margin:10px; color:#888;"><i>Zenith AI réfléchit...</i></div>`;
+    
+    setTimeout(() => {
+        // Pour activer la vraie IA, remplace ceci par un fetch vers ton API Proxy
+        const response = "Je suis l'IA Zenith. J'ai analysé votre demande. Voici une réponse optimisée : " + question.split(' ').reverse().join(' ') + " (Mode Demo)";
+        container.lastElementChild.innerHTML = `<div style="text-align:left; color:white;">🤖 ${response}</div>`;
+    }, 1000);
+}
+
+// --- SOCIAL & SHORTS ---
+async function loadFeed() {
+    // Ici on chargerait depuis Supabase. Simulation pour fluidité :
+    const feed = document.getElementById('feed-content');
+    feed.innerHTML = `
+        <div class="shorts-container">
+            <div class="short-card"><img src="https://images.unsplash.com/photo-1516035069371-29a1b244cc32" class="short-video"><div style="position:absolute; bottom:10px; left:10px; font-weight:bold;">Tuto Code</div></div>
+            <div class="short-card"><img src="https://images.unsplash.com/photo-1550751827-4bd374c3f58b" class="short-video"><div style="position:absolute; bottom:10px; left:10px; font-weight:bold;">Hack Life</div></div>
+            <div class="short-card"><img src="https://images.unsplash.com/photo-1511512578047-dfb367046420" class="short-video"><div style="position:absolute; bottom:10px; left:10px; font-weight:bold;">Setup Dream</div></div>
+        </div>
+    `;
+    // Ajout d'un post standard
+    feed.innerHTML += `
+        <div class="glass-card" style="margin-top:20px; padding:20px; border-radius:15px; background:rgba(255,255,255,0.05);">
+            <div style="display:flex; align-items:center; gap:10px;">
+                <div style="width:40px; height:40px; background:purple; border-radius:50%;"></div>
+                <div><b>Admin Zenith</b> <span class="badge">STAFF</span><br><span style="font-size:0.8em; color:gray;">Il y a 2 min</span></div>
+            </div>
+            <p style="margin-top:15px;">La mise à jour v5.0 est déployée ! Profitez du module LaTeX et de l'IA.</p>
+        </div>
+    `;
+}
+
+async function publishPost() {
+    const txt = prompt("Votre message :");
+    if(!txt) return;
+
+    // SENTINEL CHECK
+    if(!sentinelCheck(txt)) {
+        alert("⛔ ALERTE SENTINEL : Contenu non autorisé détecté. Soyez respectueux.");
+        return;
+    }
+
+    // SI OK -> Envoi Supabase (simulé ici)
+    alert("✅ Validé par Sentinel. Publication en cours...");
+    // await _supabase.from('posts').insert({content: txt});
+}
+
+// INITIALISATION
+window.onload = () => {
+    loadFeed();
+    // Message de bienvenue audio
+    console.log("Zenith System : Online");
+}
