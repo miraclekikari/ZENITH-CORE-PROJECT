@@ -3,50 +3,132 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>ZENITH CORE OS</title>
+    <title>ZENITH TITAN v5</title>
     
     <link rel="stylesheet" href="style.css">
-    <link rel="manifest" href="manifest.json">
     
-    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Rajdhani:wght@400;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;700&family=Orbitron:wght@600&display=swap" rel="stylesheet">
+
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
 </head>
 <body>
 
-    <div id="intro-overlay">
-        <div class="intro-logo-container">
-            <i class="fas fa-microchip intro-icon"></i>
-            <div class="logo-font intro-text">ZENITH <span style="color:var(--primary)">CORE</span></div>
-        </div>
-        <div class="intro-line"></div>
-    </div>
+    <div class="app-shell">
+        <nav class="sidebar">
+            <div style="font-family:'Orbitron'; color:var(--primary); margin-bottom:30px; font-size:1.5rem;">Z</div>
+            
+            <div class="nav-icon active" onclick="nav('view-home')"><i class="fas fa-home"></i> Accueil</div>
+            <div class="nav-icon" onclick="nav('view-latex')"><i class="fas fa-square-root-alt"></i> LaTeX Lab</div>
+            <div class="nav-icon" onclick="nav('view-ai')"><i class="fas fa-brain"></i> Zenith AI</div>
+            <div class="nav-icon" onclick="nav('view-profile')"><i class="fas fa-user-astronaut"></i> Mon Profil</div>
+            <div class="nav-icon" onclick="nav('view-settings')"><i class="fas fa-cogs"></i> Système</div>
+            
+            <div style="margin-top:auto; margin-bottom:20px; color:#333; font-size:0.7em;">v5.0 TITAN</div>
+        </nav>
 
-    <div class="app-container">
-        <aside class="side-bar" id="dynamic-sidebar">
-            <div class="side-header logo-font">OPTIONS</div>
-            <div id="side-content"></div>
-        </aside>
-
-        <main class="main-view">
-            <div class="view-header-box">
-                <i class="fas fa-satellite-dish" style="font-size: 2rem; color:var(--primary);"></i>
+        <main class="main-area">
+            
+            <div style="padding:15px; display:flex; justify-content:space-between; align-items:center; background:rgba(0,0,0,0.5); backdrop-filter:blur(5px);">
+                <span style="font-family:'Orbitron'; font-size:1.2rem;">ZENITH <span style="color:var(--primary)">CORE</span></span>
                 <div>
-                    <h2 id="view-title">INITIALISATION...</h2>
-                    <p style="color:var(--text-dim); font-size:0.9rem;">Bienvenue sur Zenith Core OS.</p>
+                    <i class="fas fa-bell" style="margin-right:15px;"></i>
+                    <i class="fas fa-search"></i>
                 </div>
             </div>
-            <div id="view-body"></div>
+
+            <div class="content-scroll">
+                
+                <section id="view-home" class="view-section">
+                    <h2 style="margin-bottom:20px;">FLUX DU CAMPUS</h2>
+                    <button class="btn-primary" onclick="publishPost()" style="margin-bottom:20px; width:100%;"><i class="fas fa-plus"></i> NOUVEAU POST</button>
+                    <div id="feed-content">
+                        </div>
+                </section>
+
+                <section id="view-latex" class="view-section hidden">
+                    <h2 style="color:var(--secondary)">LABORATOIRE LATEX</h2>
+                    <p style="color:#888; font-size:0.9em;">Éditez des documents scientifiques et exportez en PDF.</p>
+                    
+                    <div class="latex-split">
+                        <div class="editor-box">
+                            <div style="margin-bottom:10px; font-size:0.8em; color:#aaa;">CODE SOURCE</div>
+                            <textarea id="latex-input" class="code-input" oninput="updateLatex()">
+\textbf{Formule de Zenith} :
+$$ E = mc^2 + \sqrt{AI} $$
+Liste des tâches :
+\begin{itemize}
+  \item Coder l'algo
+  \item Dominer le web
+\end{itemize}
+                            </textarea>
+                        </div>
+                        <div class="editor-box">
+                            <div style="display:flex; justify-content:space-between; margin-bottom:10px;">
+                                <span style="font-size:0.8em; color:#aaa;">RÉSULTAT</span>
+                                <button onclick="exportPDF()" style="background:var(--danger); border:none; color:white; border-radius:4px; cursor:pointer; font-size:0.7em; padding:2px 6px;">PDF</button>
+                            </div>
+                            <div id="latex-preview" class="preview-content"></div>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="view-ai" class="view-section hidden">
+                    <h2>INTELLIGENCE ARTIFICIELLE</h2>
+                    <div class="chat-interface">
+                        <div id="chat-container" class="chat-msgs">
+                            <div style="color:white;">🤖 Bonjour. Je suis Zenith AI. Posez-moi une question sur le code, les maths ou la vie.</div>
+                        </div>
+                        <div class="chat-input-area">
+                            <input type="text" id="ai-input" placeholder="Demandez quelque chose..." style="flex:1; background:transparent; border:none; color:white;">
+                            <button onclick="askGemini()" style="background:var(--primary); border:none; border-radius:50%; width:35px; height:35px; cursor:pointer;"><i class="fas fa-paper-plane"></i></button>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="view-profile" class="view-section hidden">
+                    <div class="profile-header">
+                        <div class="banner"></div>
+                        <img src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde" class="avatar-xl">
+                        <button style="position:absolute; right:20px; bottom:20px; background:transparent; border:1px solid white; color:white; padding:5px 15px; border-radius:20px; cursor:pointer;">Éditer le profil</button>
+                    </div>
+                    <div style="padding: 50px 20px 20px;">
+                        <h2 style="margin:0;">Étudiant Alpha <i class="fas fa-check-circle" style="color:var(--primary); font-size:0.8em;"></i></h2>
+                        <p style="color:#888;">@alpha_student • Développeur Fullstack</p>
+                        <p style="margin-top:10px;">Passionné par le code, l'IA et le futur de l'éducation. Bienvenue sur mon espace Zenith.</p>
+                        
+                        <div class="stats-row">
+                            <div class="stat-box"><div class="stat-num">1.2k</div>Posts</div>
+                            <div class="stat-box"><div class="stat-num">5.4k</div>Abonnés</div>
+                            <div class="stat-box"><div class="stat-num">89</div>Projets</div>
+                        </div>
+
+                        <hr style="border-color:var(--border); margin:30px 0;">
+                        
+                        <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap:5px;">
+                            <div style="height:120px; background:#222;"></div>
+                            <div style="height:120px; background:#333;"></div>
+                            <div style="height:120px; background:#444;"></div>
+                        </div>
+                    </div>
+                </section>
+                
+                <section id="view-settings" class="view-section hidden">
+                    <h2>PANNEAU SYSTÈME</h2>
+                    <div style="margin-top:20px;">
+                        <div class="glass-card" style="padding:15px; margin-bottom:10px; border-bottom:1px solid var(--border);">Mode Sombre (Force) <span style="float:right; color:var(--primary);">ON</span></div>
+                        <div class="glass-card" style="padding:15px; margin-bottom:10px; border-bottom:1px solid var(--border);">Notifications Push <span style="float:right; color:red;">OFF</span></div>
+                        <div class="glass-card" style="padding:15px; margin-bottom:10px; border-bottom:1px solid var(--border);">Sécurité (Sentinel) <span style="float:right; color:var(--primary);">ACTIF</span></div>
+                        <div class="glass-card" style="padding:15px; margin-bottom:10px; border-bottom:1px solid var(--border);">Vider le Cache</div>
+                    </div>
+                </section>
+
+            </div>
         </main>
     </div>
-
-    <nav class="bottom-nav">
-        <div class="nav-btn active" onclick="switchTab('courses')"><i class="fas fa-graduation-cap"></i><span>ACADÉMIE</span></div>
-        <div class="nav-btn" onclick="switchTab('community')"><i class="fas fa-globe-americas"></i><span>RÉSEAU</span></div>
-        <div class="nav-btn" onclick="switchTab('publish')"><i class="fas fa-plus-square"></i><span>PUBLIER</span></div>
-        <div class="nav-btn" onclick="switchTab('labo')"><i class="fas fa-flask"></i><span>LABO</span></div>
-        <div class="nav-btn" onclick="switchTab('settings')"><i class="fas fa-sliders-h"></i><span>SYSTÈME</span></div>
-    </nav>
 
     <script src="script.js"></script>
 </body>
