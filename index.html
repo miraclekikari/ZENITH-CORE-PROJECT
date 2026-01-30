@@ -4,124 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>ZENITH CORE OS</title>
+    
+    <link rel="stylesheet" href="style.css">
+    <link rel="manifest" href="manifest.json">
+    
     <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Rajdhani:wght@400;600;700&display=swap" rel="stylesheet">
-
-    <style>
-        :root {
-            --primary: #00ff88; /* Vert Néon Zenith */
-            --primary-glow: rgba(0, 255, 136, 0.4);
-            --bg: #020406; /* Noir profond */
-            --surface: #0a0e14; /* Surface légèrement plus claire */
-            --border: rgba(0, 255, 136, 0.15);
-            --text: #e6edf3;
-            --text-dim: #8b949e;
-        }
-
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        body { 
-            background: var(--bg); color: var(--text); 
-            font-family: 'Rajdhani', sans-serif; font-weight: 600;
-            height: 100vh; overflow: hidden; display: flex; flex-direction: column;
-        }
-        h1, h2, h3, .logo-font { font-family: 'Orbitron', sans-serif; letter-spacing: 2px; }
-
-        /* --- ANIMATION D'INTRO (STYLE NETFLIX) --- */
-        #intro-overlay {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: #000; z-index: 9999;
-            display: flex; justify-content: center; align-items: center;
-            flex-direction: column;
-            animation: fadeOutIntro 0.5s ease-out 3.5s forwards;
-        }
-        .intro-logo-container { display: flex; align-items: center; gap: 20px; animation: scaleUp 3s ease-out forwards; }
-        .intro-icon { font-size: 5rem; color: var(--primary); text-shadow: 0 0 30px var(--primary-glow); }
-        .intro-text { font-size: 3rem; font-weight: 900; color: white; }
-        .intro-line {
-            width: 0%; height: 4px; background: var(--primary);
-            margin-top: 20px; box-shadow: 0 0 20px var(--primary-glow);
-            animation: expandLine 2s ease-in-out 0.5s forwards;
-        }
-
-        @keyframes scaleUp { 0% { transform: scale(0.8); opacity: 0; } 20% { opacity: 1; } 100% { transform: scale(1.1); } }
-        @keyframes expandLine { 0% { width: 0%; } 100% { width: 200px; } }
-        @keyframes fadeOutIntro { to { opacity: 0; visibility: hidden; } }
-
-        /* --- APP PRINCIPALE (Cachée pendant l'intro) --- */
-        .app-container { display: flex; flex: 1; overflow: hidden; opacity: 0; animation: fadeInApp 1s ease-out 3.8s forwards; }
-        @keyframes fadeInApp { to { opacity: 1; } }
-
-        /* BARRE LATERALE DYNAMIQUE (AMÉLIORÉE) */
-        .side-bar {
-            width: 60px; background: var(--surface); border-right: 1px solid var(--border);
-            display: flex; flex-direction: column; padding: 20px 0;
-            transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1); z-index: 100;
-            overflow-x: hidden;
-        }
-        .side-bar:hover { width: 260px; box-shadow: 5px 0 30px rgba(0,0,0,0.5); }
-        
-        .side-header { padding: 0 20px 20px; white-space: nowrap; opacity: 0; transition: 0.3s; color: var(--primary); font-weight: bold;}
-        .side-bar:hover .side-header { opacity: 1; }
-
-        .side-item {
-            width: 100%; padding: 15px 20px; display: flex; align-items: center;
-            gap: 15px; cursor: pointer; color: var(--text-dim); transition: 0.2s;
-            border-left: 3px solid transparent;
-        }
-        .side-item:hover { background: rgba(0, 255, 136, 0.03); color: var(--text); border-left-color: var(--primary); }
-        .side-item i { min-width: 25px; font-size: 1.1rem; text-align: center; }
-        .side-label { white-space: nowrap; opacity: 0; transition: 0.3s; font-size: 0.95rem; }
-        .side-bar:hover .side-label { opacity: 1; }
-
-        /* ZONE PRINCIPALE & SCROLLBAR */
-        .main-view { flex: 1; padding: 30px; overflow-y: auto; scroll-behavior: smooth; }
-        /* Scrollbar custom pour le look "OS" */
-        .main-view::-webkit-scrollbar { width: 6px; }
-        .main-view::-webkit-scrollbar-track { background: var(--bg); }
-        .main-view::-webkit-scrollbar-thumb { background: var(--border); border-radius: 10px; }
-        .main-view::-webkit-scrollbar-thumb:hover { background: var(--primary); }
-
-        /* BARRE HORIZONTALE (BAS) */
-        .bottom-nav {
-            height: 80px; background: var(--surface); border-top: 1px solid var(--border);
-            display: flex; justify-content: space-around; align-items: center;
-            padding-bottom: 10px; /* Pour les mobiles sans bouton physique */
-            box-shadow: 0 -10px 30px rgba(0,0,0,0.3);
-        }
-        .nav-btn {
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
-            gap: 6px; color: var(--text-dim); cursor: pointer; font-size: 0.75rem; transition: 0.3s;
-            height: 100%; flex: 1;
-        }
-        .nav-btn.active { color: var(--primary); }
-        .nav-btn.active i { transform: translateY(-3px); text-shadow: 0 0 15px var(--primary-glow); }
-        .nav-btn i { font-size: 1.5rem; transition: 0.3s; }
-
-        /* UI ELEMENTS */
-        .glass-card {
-            background: rgba(13, 17, 23, 0.6); /* Plus transparent */
-            backdrop-filter: blur(10px); /* Effet flou */
-            border: 1px solid var(--border);
-            border-radius: 16px; padding: 25px; margin-bottom: 20px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-        }
-        .view-header-box {
-            display: flex; align-items: center; gap: 15px; margin-bottom: 30px;
-            padding-bottom: 15px; border-bottom: 2px solid var(--border);
-        }
-        
-        .grid-tools { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 15px; }
-        .tool-box { 
-            background: rgba(255,255,255,0.03); border: 1px solid var(--border); 
-            padding: 20px 10px; border-radius: 12px; text-align: center; cursor: pointer; transition: 0.3s;
-            display: flex; flex-direction: column; align-items: center; gap: 10px;
-        }
-        .tool-box:hover { background: var(--primary); color: #000; border-color: var(--primary); box-shadow: 0 0 20px var(--primary-glow); }
-        .tool-box i { font-size: 1.8rem; }
-
-        .hidden { display: none !important; }
-    </style>
 </head>
 <body>
 
@@ -135,22 +24,19 @@
 
     <div class="app-container">
         <aside class="side-bar" id="dynamic-sidebar">
-            <div class="side-header logo-font">OPTIONS DU MODULE</div>
-            <div id="side-content">
-                </div>
+            <div class="side-header logo-font">OPTIONS</div>
+            <div id="side-content"></div>
         </aside>
 
-        <main class="main-view" id="content-view">
+        <main class="main-view">
             <div class="view-header-box">
                 <i class="fas fa-satellite-dish" style="font-size: 2rem; color:var(--primary);"></i>
                 <div>
-                    <h2 id="view-title">INITIALISATION DU SYSTÈME...</h2>
+                    <h2 id="view-title">INITIALISATION...</h2>
                     <p style="color:var(--text-dim); font-size:0.9rem;">Bienvenue sur Zenith Core OS.</p>
                 </div>
             </div>
-            
-            <div id="view-body">
-                </div>
+            <div id="view-body"></div>
         </main>
     </div>
 
@@ -158,158 +44,10 @@
         <div class="nav-btn active" onclick="switchTab('courses')"><i class="fas fa-graduation-cap"></i><span>ACADÉMIE</span></div>
         <div class="nav-btn" onclick="switchTab('community')"><i class="fas fa-globe-americas"></i><span>RÉSEAU</span></div>
         <div class="nav-btn" onclick="switchTab('publish')"><i class="fas fa-plus-square"></i><span>PUBLIER</span></div>
-        <div class="nav-btn" onclick="switchTab('labo')"><i class="fas fa-flask"></i><span>LABO & Outils</span></div>
+        <div class="nav-btn" onclick="switchTab('labo')"><i class="fas fa-flask"></i><span>LABO</span></div>
         <div class="nav-btn" onclick="switchTab('settings')"><i class="fas fa-sliders-h"></i><span>SYSTÈME</span></div>
     </nav>
 
-    <script>
-        const _supabase = supabase.createClient('https://ubmewtlymrnbcamanjhs.supabase.co', 'sb_publishable_EY6s8jOGhajZ_aBjQgLkdQ_58aiZhxO');
-
-        // --- CONFIGURATION DES 100+ OPTIONS (Liste Structurée pour le menu latéral) ---
-        const sideMenus = {
-            courses: [
-                {header: "PARCOURS PRINCIPAUX"},
-                {icon: 'fa-network-wired', label: 'Réseaux & Infra'},
-                {icon: 'fa-code', label: 'Développement Web/Mobile'},
-                {icon: 'fa-shield-alt', label: 'Cybersécurité'},
-                {icon: 'fa-brain', label: 'Intelligence Artificielle'},
-                {header: "Ressources"},
-                {icon: 'fa-bookmark', label: 'Mes Cours Favoris'},
-                {icon: 'fa-history', label: 'Historique d\'apprentissage'}
-            ],
-            community: [
-                // C'EST ICI QUE J'AJOUTE LES IDÉES D'OPTIONS ENGAGEANTES
-                {header: "FLUX SOCIAL"},
-                {icon: 'fa-fire', label: 'Tendances du Campus'},
-                {icon: 'fa-user-astronaut', label: 'Mon Cercle (Amis)'},
-                {icon: 'fa-hashtag', label: 'Explorer les Sujets'},
-                
-                {header: "INTERACTIONS"},
-                {icon: 'fa-poll', label: 'Sondages Express'},
-                {icon: 'fa-bolt', label: 'Stories (24h) - Bientôt'},
-                {icon: 'fa-comment-dots', label: 'Groupes de Discussion'},
-                
-                {header: "EVÉNEMENTS"},
-                {icon: 'fa-calendar-alt', label: 'Calendrier Hackathons'},
-                {icon: 'fa-trophy', label: 'Classement Général (XP)'}
-            ],
-            publish: [
-                {icon: 'fa-pen-fancy', label: 'Nouvel Article / Tuto'},
-                {icon: 'fa-code', label: 'Partager un Snippet de Code'},
-                {icon: 'fa-image', label: 'Poster un Projet (Portfolio)'},
-                {icon: 'fa-question-circle', label: 'Poser une Question (Q&A)'}
-            ],
-            labo: [
-                // LES 10+ OUTILS UTILES ET STYLÉS
-                {header: "OUTILS DE CODE"},
-                {icon: 'fa-terminal', label: 'Terminal JS Live'},
-                {icon: 'fa-laptop-code', label: 'Éditeur HTML/CSS Rapide'},
-                {icon: 'fa-database', label: 'Validateur JSON/SQL'},
-                
-                {header: "UTILITAIRES"},
-                {icon: 'fa-calculator', label: 'Calculatrice Scientifique'},
-                {icon: 'fa-key', label: 'Générateur de Mot de Passe'},
-                {icon: 'fa-stopwatch', label: 'Chrono Pomodoro'},
-                {icon: 'fa-palette', label: 'Sélecteur de Couleurs Hex'},
-                
-                {header: "EXTRA"},
-                {icon: 'fa-bug', label: 'Rapporteur de Bug'},
-                {icon: 'fa-robot', label: 'Assistant IA (Bêta)'}
-            ],
-            settings: [
-                {header: "MON PROFIL"},
-                {icon: 'fa-id-card', label: 'Badge & Certification'},
-                {icon: 'fa-user-edit', label: 'Modifier Infos'},
-                {header: "INTERFACE"},
-                {icon: 'fa-moon', label: 'Mode Sombre (Actif)'},
-                {icon: 'fa-bell', label: 'Notifications'},
-                {header: "À PROPOS"},
-                {icon: 'fa-info-circle', label: 'Version du Core: v4.0'},
-                {icon: 'fa-headset', label: 'Contacter le Staff'}
-            ]
-        };
-
-        // --- LOGIQUE DE NAVIGATION V4 ---
-        function switchTab(tabId) {
-            // Update nav active
-            document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-            event.currentTarget.classList.add('active');
-
-            // Update Sidebar content
-            const sideContent = document.getElementById('side-content');
-            sideContent.innerHTML = '';
-            (sideMenus[tabId] || []).forEach(item => {
-                if(item.header) {
-                    sideContent.innerHTML += `<div style="padding: 15px 20px 5px; color:var(--primary); font-size:0.8rem; font-weight:bold; letter-spacing:1px;">${item.header}</div>`;
-                } else {
-                    sideContent.innerHTML += `
-                        <div class="side-item" onclick="alert('Module [${item.label}] en cours de chargement...')">
-                            <i class="fas ${item.icon}"></i>
-                            <span class="side-label">${item.label}</span>
-                        </div>`;
-                }
-            });
-
-            renderContent(tabId);
-        }
-
-        function renderContent(tabId) {
-            const body = document.getElementById('view-body');
-            const title = document.getElementById('view-title');
-
-            if(tabId === 'courses') {
-                title.innerText = "ACADÉMIE ZENITH";
-                body.innerHTML = `
-                    <div class="glass-card" style="display:flex; gap:20px; align-items:center;">
-                        <img src="https://images.unsplash.com/photo-1558494949-ef010cbdcc51" style="width:120px; height:120px; border-radius:12px; object-fit:cover; border:2px solid var(--primary);">
-                        <div>
-                            <span style="color:var(--primary); font-weight:bold; letter-spacing:1px;">⚡ MODULE RECOMMANDÉ</span>
-                            <h3 style="margin:10px 0; font-size:1.3rem;">Initiation aux Réseaux</h3>
-                            <p style="color:var(--text-dim);">Le socle fondamental. Comprendre comment les données voyagent.</p>
-                            <button style="margin-top:15px; background:var(--primary); color:black; border:none; padding:10px 25px; border-radius:8px; font-weight:bold; cursor:pointer;">COMMENCER</button>
-                        </div>
-                    </div>
-                    <h3 style="margin: 30px 0 20px;">Récemment ajoutés</h3>
-                    <div style="display:grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap:20px;">
-                        <div class="glass-card" style="padding:15px;"><h4>Intro Python</h4><p style="color:var(--text-dim); font-size:0.9rem;">Dev • 4h</p></div>
-                        <div class="glass-card" style="padding:15px;"><h4>Cybersécurité 101</h4><p style="color:var(--text-dim); font-size:0.9rem;">Sécu • 6h</p></div>
-                    </div>
-                    `;
-            } else if(tabId === 'labo') {
-                title.innerText = "BOÎTE À OUTILS NUMÉRIQUE";
-                body.innerHTML = `
-                    <p style="margin-bottom:20px; color:var(--text-dim);">Accès rapide aux utilitaires pour étudiants et développeurs.</p>
-                    <div class="grid-tools">
-                        <div class="tool-box"><i class="fas fa-calculator"></i><span>Calculatrice</span></div>
-                        <div class="tool-box"><i class="fas fa-terminal"></i><span>Console JS</span></div>
-                        <div class="tool-box"><i class="fas fa-code"></i><span>Éditeur Web</span></div>
-                        <div class="tool-box"><i class="fas fa-key"></i><span>Générateur Pass</span></div>
-                        <div class="tool-box"><i class="fas fa-stopwatch"></i><span>Pomodoro</span></div>
-                        <div class="tool-box"><i class="fas fa-palette"></i><span>Color Picker</span></div>
-                        <div class="tool-box"><i class="fas fa-file-code"></i><span>JSON Formatter</span></div>
-                        <div class="tool-box"><i class="fas fa-bug"></i><span>Debug Info</span></div>
-                    </div>`;
-            } else if(tabId === 'community') {
-                title.innerText = "LE RÉSEAU DU CAMPUS";
-                body.innerHTML = `
-                    <div class="glass-card" style="text-align:center; padding:40px;">
-                        <i class="fas fa-satellite-dish" style="font-size:3rem; color:var(--primary); margin-bottom:20px;"></i>
-                        <h3>Flux en direct</h3>
-                        <p style="color:var(--text-dim);">Connectez-vous pour voir ce que vos camarades partagent.</p>
-                        <button style="margin-top:20px; background:transparent; border:2px solid var(--primary); color:var(--primary); padding:10px 30px; border-radius:20px; font-weight:bold;">CONNEXION</button>
-                    </div>
-                `;
-            }
-             else {
-                title.innerText = `MODULE ${tabId.toUpperCase()}`;
-                body.innerHTML = `<div class="glass-card" style="text-align:center; padding:50px; opacity:0.7;"><i class="fas fa-sync fa-spin" style="font-size:2rem; margin-bottom:20px;"></i><p>Chargement des données du coeur...</p></div>`;
-            }
-        }
-
-        // Initialisation après l'intro (simulée par le CSS delay)
-        setTimeout(() => {
-            switchTab('courses');
-        }, 3800); // Attend la fin de l'animation d'intro
-    </script>
+    <script src="script.js"></script>
 </body>
 </html>
